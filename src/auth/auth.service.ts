@@ -47,6 +47,12 @@ export class AuthService {
     return this.signToken(user.id, user.email);
   }
 
+  getMe(user: any) {
+    // You can shape this however you want (e.g., exclude password)
+    const { password, ...cleanUser } = user;
+    return cleanUser;
+  }
+
   async signToken(
     userId: string,
     email: string,
