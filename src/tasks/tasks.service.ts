@@ -2,16 +2,29 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { EditTaskDto } from './dto/edit-task.dto';
+import { GetTasksDto } from './dto/get-tasks.dto';
 
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  getTasks(userId: string) {
+  getTasks(userId: string, filters: GetTasksDto) {
+    const { status, search, skip, take } = filters;
+
     return this.prisma.task.findMany({
       where: {
-        userId: userId,
+        userId,
+        status,
+        OR: search
+          ? [
+              { title: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ]
+          : undefined,
       },
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -42,7 +55,6 @@ export class TasksService {
     if (!task || task.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
-
     return this.prisma.task.update({
       where: { id: taskId },
       data: {
@@ -55,11 +67,9 @@ export class TasksService {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
     });
-
     if (!task || task.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
-
     await this.prisma.task.delete({
       where: { id: taskId },
     });

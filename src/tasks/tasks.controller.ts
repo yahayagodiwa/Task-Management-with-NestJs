@@ -7,12 +7,14 @@ import {
   Delete,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { EditTaskDto } from './dto/edit-task.dto';
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { GetTasksDto } from './dto/get-tasks.dto';
 
 @UseGuards(JwtGuard)
 @Controller('tasks')
@@ -20,8 +22,8 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(@GetUser('sub') userId: string) {
-    return this.tasksService.getTasks(userId);
+  getTasks(@GetUser('sub') userId: string, @Query() filters: GetTasksDto) {
+    return this.tasksService.getTasks(userId, filters);
   }
 
   @Get(':id')
